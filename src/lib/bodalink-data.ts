@@ -30,7 +30,9 @@ export interface Member {
   joinedAt: string;
   attendance: number[]; // last 12 weeks: 1 = present, 0.5 = apology, 0 = absent
   savings: number[];   // weekly savings KES across the year (52)
+  contributions: number[]; // weekly group-development contributions KES (52)
   targetSavings: number;
+  targetContributions: number;
 }
 
 const REGIONS = ["Nairobi CBD", "Kisumu", "Mombasa", "Nakuru", "Eldoret", "Thika"];
@@ -63,10 +65,15 @@ function generateMembers(groupId: string, region: string, start: number, count: 
       return r > 0.85 ? 0 : r > 0.7 ? 0.5 : 1;
     });
     const targetSavings = 52000;
+    const targetContributions = 26000;
     const weekly = Math.round(800 + rand(seed) * 600);
+    const weeklyContrib = Math.round(400 + rand(seed + 3) * 200);
     const weeksElapsed = 34;
     const savings = Array.from({ length: 52 }, (_, w) =>
       w < weeksElapsed ? Math.round(weekly * (0.7 + rand(seed + w) * 0.5)) : 0,
+    );
+    const contributions = Array.from({ length: 52 }, (_, w) =>
+      w < weeksElapsed ? Math.round(weeklyContrib * (0.6 + rand(seed * 2 + w) * 0.6)) : 0,
     );
     return {
       id: `m_${groupId}_${i}`,
@@ -79,7 +86,9 @@ function generateMembers(groupId: string, region: string, start: number, count: 
       joinedAt: `202${3 + (seed % 3)}-0${1 + (seed % 9)}-15`,
       attendance,
       savings,
+      contributions,
       targetSavings,
+      targetContributions,
     } as Member;
   }).map((m, i) => {
     const r = rand(start + i + 99);
@@ -111,7 +120,7 @@ export const SEED_USERS: User[] = [
   { id: "u_member", name: SEED_MEMBERS[0].name, phone: SEED_MEMBERS[0].phone, role: "member", groupId: "g1" },
 ];
 
-const LS_KEY = "bodalink_state_v1";
+const LS_KEY = "bodalink_state_v2";
 const SESSION_KEY = "bodalink_session_v1";
 
 interface State { members: Member[]; groups: Group[]; }
@@ -139,7 +148,7 @@ export const store = {
   getMembersByGroup(gid: string) { return load().members.filter(m => m.groupId === gid); },
   getMember(id: string) { return load().members.find(m => m.id === id); },
   getGroup(id: string) { return load().groups.find(g => g.id === id); },
-  addMember(m: Omit<Member, "id" | "attendance" | "savings" | "targetSavings" | "status" | "joinedAt">) {
+  addMember(m: Omit<Member, "id" | "attendance" | "savings" | "contributions" | "targetSavings" | "targetContributions" | "status" | "joinedAt">) {
     const s = load();
     const newMember: Member = {
       ...m,
@@ -148,7 +157,9 @@ export const store = {
       joinedAt: new Date().toISOString().slice(0, 10),
       attendance: Array(12).fill(1),
       savings: Array(52).fill(0),
+      contributions: Array(52).fill(0),
       targetSavings: 52000,
+      targetContributions: 26000,
     };
     s.members.push(newMember);
     save(s);
@@ -158,6 +169,21 @@ export const store = {
     const s = load();
     const m = s.members.find(x => x.id === id);
     if (m) { m.status = status; save(s); }
+  },
+  recordWeek(id: string, entry: { attendance?: number; savings?: number; contribution?: number }) {
+    const s = load();
+    const m = s.members.find(x => x.id === id);
+    if (!m) return;
+    if (typeof entry.attendance === "number") {
+      m.attendance = [...m.attendance.slice(1), entry.attendance];
+    }
+    if (typeof entry.savings === "number" || typeof entry.contribution === "number") {
+      const idx = Math.max(0, m.savings.findIndex(v => v === 0));
+      const i = idx === -1 ? m.savings.length - 1 : idx;
+      if (typeof entry.savings === "number") m.savings[i] = (m.savings[i] || 0) + entry.savings;
+      if (typeof entry.contribution === "number") m.contributions[i] = (m.contributions[i] || 0) + entry.contribution;
+    }
+    save(s);
   },
 };
 
@@ -187,4 +213,12 @@ export function savingsTotal(m: Member): number {
 
 export function savingsProgress(m: Member): number {
   return Math.min(100, Math.round((savingsTotal(m) / m.targetSavings) * 100));
+}
+
+export function contributionsTotal(m: Member): number {
+  return m.contributions.reduce((a, b) => a + b, 0);
+}
+
+export function contributionsProgress(m: Member): number {
+  return Math.min(100, Math.round((contributionsTotal(m) / m.targetContributions) * 100));
 }

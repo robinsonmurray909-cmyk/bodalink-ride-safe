@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { store, session, attendanceRate, attendanceLevel, savingsTotal, type Member } from "@/lib/bodalink-data";
-import { UserPlus, Pause, Trash2, Users, Wallet, Calendar } from "lucide-react";
+import { store, session, attendanceRate, attendanceLevel, savingsTotal, contributionsTotal, type Member } from "@/lib/bodalink-data";
+import { UserPlus, Pause, Trash2, Users, Wallet, Calendar, HandCoins, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/official")({
@@ -19,6 +19,8 @@ function OfficialDashboard() {
   const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", nationalId: "", plate: "" });
+  const [recordFor, setRecordFor] = useState<Member | null>(null);
+  const [record, setRecord] = useState({ attendance: "1", savings: "", contribution: "" });
   const group = user?.groupId ? store.getGroup(user.groupId) : null;
 
   const refresh = () => { if (user?.groupId) setMembers(store.getMembersByGroup(user.groupId)); };
@@ -41,8 +43,23 @@ function OfficialDashboard() {
     refresh();
   };
 
+  const handleRecord = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recordFor) return;
+    store.recordWeek(recordFor.id, {
+      attendance: parseFloat(record.attendance),
+      savings: record.savings ? parseInt(record.savings, 10) : undefined,
+      contribution: record.contribution ? parseInt(record.contribution, 10) : undefined,
+    });
+    toast.success(`Week recorded for ${recordFor.name}`);
+    setRecordFor(null);
+    setRecord({ attendance: "1", savings: "", contribution: "" });
+    refresh();
+  };
+
   const avgAttendance = members.length ? Math.round(members.reduce((s, m) => s + attendanceRate(m), 0) / members.length) : 0;
   const totalSavings = members.reduce((s, m) => s + savingsTotal(m), 0);
+  const totalContrib = members.reduce((s, m) => s + contributionsTotal(m), 0);
 
   return (
     <div className="space-y-6">
@@ -71,15 +88,17 @@ function OfficialDashboard() {
         </div>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={Users} label="Members" value={members.length.toString()} />
         <Stat icon={Calendar} label="Avg attendance" value={`${avgAttendance}%`} />
         <Stat icon={Wallet} label="Group savings" value={`KES ${(totalSavings / 1000).toFixed(0)}K`} />
+        <Stat icon={HandCoins} label="Group dev. fund" value={`KES ${(totalContrib / 1000).toFixed(0)}K`} />
       </div>
 
       <Card className="overflow-hidden">
-        <div className="px-6 py-4 border-b border-border">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-display text-lg font-bold">Members</h2>
+          <p className="text-xs text-muted-foreground">Record weekly attendance, savings & mandatory group-development contribution per rider.</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -89,6 +108,7 @@ function OfficialDashboard() {
                 <th className="text-left px-5 py-3">Plate</th>
                 <th className="text-left px-5 py-3">Attendance</th>
                 <th className="text-left px-5 py-3">Savings (YTD)</th>
+                <th className="text-left px-5 py-3">Group dev. (YTD)</th>
                 <th className="text-left px-5 py-3">Status</th>
                 <th className="text-right px-5 py-3">Actions</th>
               </tr>
@@ -107,6 +127,7 @@ function OfficialDashboard() {
                     <td className="px-5 py-3 font-mono text-xs">{m.plate}</td>
                     <td className={`px-5 py-3 font-display font-semibold ${col} tabular-nums`}>{rate}%</td>
                     <td className="px-5 py-3 tabular-nums">KES {savingsTotal(m).toLocaleString()}</td>
+                    <td className="px-5 py-3 tabular-nums">KES {contributionsTotal(m).toLocaleString()}</td>
                     <td className="px-5 py-3">
                       {m.status === "active" && <Badge className="bg-success/15 text-success border-success/20" variant="outline">Active</Badge>}
                       {m.status === "suspended" && <Badge variant="destructive">Suspended</Badge>}
@@ -114,6 +135,9 @@ function OfficialDashboard() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="default" onClick={() => setRecordFor(m)}>
+                          <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Record week
+                        </Button>
                         {m.status === "active" ? (
                           <Button size="sm" variant="outline" onClick={() => updateStatus(m.id, "suspended", "suspended")}>
                             <Pause className="h-3.5 w-3.5 mr-1" /> Suspend
@@ -133,6 +157,41 @@ function OfficialDashboard() {
           </table>
         </div>
       </Card>
+
+      <Dialog open={!!recordFor} onOpenChange={(o) => !o && setRecordFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record this week — {recordFor?.name}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRecord} className="space-y-4">
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground">Attendance</label>
+              <div className="mt-1.5 grid grid-cols-3 gap-2">
+                {[
+                  { v: "1", label: "Present" },
+                  { v: "0.5", label: "Apology" },
+                  { v: "0", label: "Absent" },
+                ].map(opt => (
+                  <Button key={opt.v} type="button" variant={record.attendance === opt.v ? "default" : "outline"} size="sm" onClick={() => setRecord({ ...record, attendance: opt.v })}>
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground">Personal savings (KES)</label>
+              <Input type="number" min="0" placeholder="e.g. 1000" value={record.savings} onChange={e => setRecord({ ...record, savings: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-primary font-semibold">Group development contribution (KES) — mandatory</label>
+              <Input type="number" min="0" placeholder="e.g. 500" value={record.contribution} onChange={e => setRecord({ ...record, contribution: e.target.value })} />
+            </div>
+            <DialogFooter>
+              <Button type="submit" className="w-full">Save week</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
