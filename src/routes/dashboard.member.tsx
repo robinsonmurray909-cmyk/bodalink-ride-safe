@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PercentBar } from "@/components/PercentBar";
-import { store, session, attendanceRate, savingsTotal, savingsProgress, type Member } from "@/lib/bodalink-data";
-import { Calendar, Wallet, TrendingUp, Bike } from "lucide-react";
+import { store, session, attendanceRate, savingsTotal, savingsProgress, contributionsTotal, contributionsProgress, type Member } from "@/lib/bodalink-data";
+import { Calendar, Wallet, TrendingUp, Bike, HandCoins } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/member")({
   ssr: false,
