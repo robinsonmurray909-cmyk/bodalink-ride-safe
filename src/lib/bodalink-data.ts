@@ -214,3 +214,11 @@ export function savingsTotal(m: Member): number {
 export function savingsProgress(m: Member): number {
   return Math.min(100, Math.round((savingsTotal(m) / m.targetSavings) * 100));
 }
+
+export function contributionsTotal(m: Member): number {
+  return m.contributions.reduce((a, b) => a + b, 0);
+}
+
+export function contributionsProgress(m: Member): number {
+  return Math.min(100, Math.round((contributionsTotal(m) / m.targetContributions) * 100));
+}
