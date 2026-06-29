@@ -19,6 +19,8 @@ function OfficialDashboard() {
   const [members, setMembers] = useState<Member[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", nationalId: "", plate: "" });
+  const [recordFor, setRecordFor] = useState<Member | null>(null);
+  const [record, setRecord] = useState({ attendance: "1", savings: "", contribution: "" });
   const group = user?.groupId ? store.getGroup(user.groupId) : null;
 
   const refresh = () => { if (user?.groupId) setMembers(store.getMembersByGroup(user.groupId)); };
@@ -41,8 +43,23 @@ function OfficialDashboard() {
     refresh();
   };
 
+  const handleRecord = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recordFor) return;
+    store.recordWeek(recordFor.id, {
+      attendance: parseFloat(record.attendance),
+      savings: record.savings ? parseInt(record.savings, 10) : undefined,
+      contribution: record.contribution ? parseInt(record.contribution, 10) : undefined,
+    });
+    toast.success(`Week recorded for ${recordFor.name}`);
+    setRecordFor(null);
+    setRecord({ attendance: "1", savings: "", contribution: "" });
+    refresh();
+  };
+
   const avgAttendance = members.length ? Math.round(members.reduce((s, m) => s + attendanceRate(m), 0) / members.length) : 0;
   const totalSavings = members.reduce((s, m) => s + savingsTotal(m), 0);
+  const totalContrib = members.reduce((s, m) => s + contributionsTotal(m), 0);
 
   return (
     <div className="space-y-6">
