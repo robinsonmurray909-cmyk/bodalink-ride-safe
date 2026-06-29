@@ -120,7 +120,7 @@ export const SEED_USERS: User[] = [
   { id: "u_member", name: SEED_MEMBERS[0].name, phone: SEED_MEMBERS[0].phone, role: "member", groupId: "g1" },
 ];
 
-const LS_KEY = "bodalink_state_v1";
+const LS_KEY = "bodalink_state_v2";
 const SESSION_KEY = "bodalink_session_v1";
 
 interface State { members: Member[]; groups: Group[]; }
