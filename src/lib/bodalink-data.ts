@@ -148,7 +148,7 @@ export const store = {
   getMembersByGroup(gid: string) { return load().members.filter(m => m.groupId === gid); },
   getMember(id: string) { return load().members.find(m => m.id === id); },
   getGroup(id: string) { return load().groups.find(g => g.id === id); },
-  addMember(m: Omit<Member, "id" | "attendance" | "savings" | "targetSavings" | "status" | "joinedAt">) {
+  addMember(m: Omit<Member, "id" | "attendance" | "savings" | "contributions" | "targetSavings" | "targetContributions" | "status" | "joinedAt">) {
     const s = load();
     const newMember: Member = {
       ...m,
@@ -157,7 +157,9 @@ export const store = {
       joinedAt: new Date().toISOString().slice(0, 10),
       attendance: Array(12).fill(1),
       savings: Array(52).fill(0),
+      contributions: Array(52).fill(0),
       targetSavings: 52000,
+      targetContributions: 26000,
     };
     s.members.push(newMember);
     save(s);
@@ -167,6 +169,21 @@ export const store = {
     const s = load();
     const m = s.members.find(x => x.id === id);
     if (m) { m.status = status; save(s); }
+  },
+  recordWeek(id: string, entry: { attendance?: number; savings?: number; contribution?: number }) {
+    const s = load();
+    const m = s.members.find(x => x.id === id);
+    if (!m) return;
+    if (typeof entry.attendance === "number") {
+      m.attendance = [...m.attendance.slice(1), entry.attendance];
+    }
+    if (typeof entry.savings === "number" || typeof entry.contribution === "number") {
+      const idx = Math.max(0, m.savings.findIndex(v => v === 0));
+      const i = idx === -1 ? m.savings.length - 1 : idx;
+      if (typeof entry.savings === "number") m.savings[i] = (m.savings[i] || 0) + entry.savings;
+      if (typeof entry.contribution === "number") m.contributions[i] = (m.contributions[i] || 0) + entry.contribution;
+    }
+    save(s);
   },
 };
 
