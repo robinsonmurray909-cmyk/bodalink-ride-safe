@@ -99,28 +99,64 @@ function MemberDashboard() {
             </div>
           </div>
         </Card>
+
+        {/* Group Development Contribution - mandatory */}
+        <Card className="p-6 md:col-span-2 border-primary/30">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><HandCoins className="h-5 w-5" /></div>
+            <div>
+              <div className="text-xs uppercase tracking-wider text-primary font-semibold">Mandatory · Group development</div>
+              <h2 className="font-display text-xl font-bold">Weekly group contribution</h2>
+            </div>
+            <Badge variant="outline" className="ml-auto border-primary/40 text-primary">Required</Badge>
+          </div>
+          <div className="mt-6"><PercentBar value={contribProgress} label="Progress to group target" /></div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl bg-muted/60 p-4">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Contributed</div>
+              <div className="mt-1 font-display text-2xl font-bold tabular-nums">KES {contribTotal.toLocaleString()}</div>
+            </div>
+            <div className="rounded-xl bg-muted/60 p-4">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Remaining</div>
+              <div className="mt-1 font-display text-2xl font-bold tabular-nums">KES {Math.max(0, contribRemaining).toLocaleString()}</div>
+            </div>
+            <div className="rounded-xl bg-muted/60 p-4">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Target</div>
+              <div className="mt-1 font-display text-2xl font-bold tabular-nums">KES {me.targetContributions.toLocaleString()}</div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Recent weeks */}
+      {/* Recent weeks bar chart */}
       <Card className="p-6">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><TrendingUp className="h-5 w-5" /></div>
           <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Weekly contributions</div>
-            <h2 className="font-display text-xl font-bold">Last 12 weeks</h2>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Weekly activity</div>
+            <h2 className="font-display text-xl font-bold">Savings vs. group contribution (last 12 weeks)</h2>
           </div>
         </div>
-        <div className="mt-6 grid grid-cols-12 gap-2 items-end h-32">
+        <div className="mt-6 grid grid-cols-12 gap-2 items-end h-40">
           {me.savings.slice(Math.max(0, weeksElapsed - 12), weeksElapsed).map((amt, i) => {
-            const max = Math.max(...me.savings) || 1;
-            const h = Math.max(8, (amt / max) * 100);
+            const max = Math.max(...me.savings, ...me.contributions) || 1;
+            const h = Math.max(6, (amt / max) * 100);
+            const c = me.contributions[Math.max(0, weeksElapsed - 12) + i] || 0;
+            const hc = Math.max(6, (c / max) * 100);
             return (
-              <div key={i} className="flex flex-col items-center gap-1 group">
-                <div className="w-full rounded-t bg-primary/80 group-hover:bg-primary transition-colors" style={{ height: `${h}%` }} title={`KES ${amt}`} />
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="w-full flex items-end gap-0.5 h-32">
+                  <div className="flex-1 rounded-t bg-primary/80" style={{ height: `${h}%` }} title={`Savings KES ${amt}`} />
+                  <div className="flex-1 rounded-t bg-secondary" style={{ height: `${hc}%` }} title={`Contribution KES ${c}`} />
+                </div>
                 <div className="text-[10px] text-muted-foreground">W{weeksElapsed - 11 + i}</div>
               </div>
             );
           })}
+        </div>
+        <div className="mt-4 flex gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary/80" /> Personal savings</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-secondary" /> Group contribution</span>
         </div>
       </Card>
     </div>
