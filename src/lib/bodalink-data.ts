@@ -30,7 +30,9 @@ export interface Member {
   joinedAt: string;
   attendance: number[]; // last 12 weeks: 1 = present, 0.5 = apology, 0 = absent
   savings: number[];   // weekly savings KES across the year (52)
+  contributions: number[]; // weekly group-development contributions KES (52)
   targetSavings: number;
+  targetContributions: number;
 }
 
 const REGIONS = ["Nairobi CBD", "Kisumu", "Mombasa", "Nakuru", "Eldoret", "Thika"];
