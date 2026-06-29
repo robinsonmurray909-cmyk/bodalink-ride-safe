@@ -30,6 +30,9 @@ function MemberDashboard() {
   const progress = savingsProgress(me);
   const remaining = me.targetSavings - total;
   const weeksElapsed = me.savings.filter(s => s > 0).length;
+  const contribTotal = contributionsTotal(me);
+  const contribProgress = contributionsProgress(me);
+  const contribRemaining = me.targetContributions - contribTotal;
 
   return (
     <div className="space-y-6">
