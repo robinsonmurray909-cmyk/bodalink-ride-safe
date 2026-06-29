@@ -22,12 +22,13 @@ export function AppHeader({ user }: { user?: User | null }) {
     navigate({ to: "/" });
   };
 
-  const shellClass = scrolled
-    ? "border-border bg-background/85 backdrop-blur-md shadow-sm"
-    : "border-transparent bg-transparent";
-  const linkColor = scrolled ? "text-foreground/80" : "text-white/90";
-  const brandColor = scrolled ? "text-foreground" : "text-white";
-  const subColor = scrolled ? "text-muted-foreground" : "text-white/70";
+  const transparent = transparentRoute && !scrolled;
+  const shellClass = transparent
+    ? "border-transparent bg-transparent"
+    : "border-border bg-background/85 backdrop-blur-md shadow-sm";
+  const linkColor = transparent ? "text-white/90" : "text-foreground/80";
+  const brandColor = transparent ? "text-white" : "text-foreground";
+  const subColor = transparent ? "text-white/70" : "text-muted-foreground";
 
   return (
     <header className={`sticky top-0 z-50 border-b transition-colors duration-300 ${shellClass}`}>
