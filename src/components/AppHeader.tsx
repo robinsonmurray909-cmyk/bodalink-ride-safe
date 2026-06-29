@@ -56,7 +56,7 @@ export function AppHeader({ user }: { user?: User | null }) {
               <Link to={user.role === "main" ? "/dashboard/main" : user.role === "official" ? "/dashboard/official" : "/dashboard/member"}>
                 <Button variant="secondary" size="sm">Dashboard</Button>
               </Link>
-              <Button variant="ghost" size="sm" onClick={handleLogout} className={scrolled ? "" : "text-white hover:text-white hover:bg-white/10"}>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className={transparent ? "text-white hover:text-white hover:bg-white/10" : ""}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </>
