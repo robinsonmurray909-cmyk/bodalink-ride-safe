@@ -82,10 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Smart management platform for boda boda self-help groups in Kenya." },
       { name: "author", content: "BodaLink" },
       { property: "og:title", content: "BodaLink — Riders United" },
-      { property: "og:description", content: "Digitise attendance, savings and member welfare for boda boda groups." },
+      { property: "og:description", content: "Smart management platform for boda boda self-help groups in Kenya." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "BodaLink — Riders United" },
+      { name: "twitter:description", content: "Smart management platform for boda boda self-help groups in Kenya." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/745de304-d45a-4eea-b01c-0e4098b1ee26/id-preview-57fea527--840c69fc-dc82-4eec-8c76-ff4572e8beac.lovable.app-1782735257483.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/745de304-d45a-4eea-b01c-0e4098b1ee26/id-preview-57fea527--840c69fc-dc82-4eec-8c76-ff4572e8beac.lovable.app-1782735257483.png" },
     ],
     links: [
       {
