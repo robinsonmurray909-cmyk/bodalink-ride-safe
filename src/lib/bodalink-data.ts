@@ -75,7 +75,7 @@ function generateMembers(groupId: string, region: string, start: number, count: 
       nationalId: makeId(seed),
       plate: makePlate(seed),
       groupId,
-      status: r => r,
+      status: "active" as const,
       joinedAt: `202${3 + (seed % 3)}-0${1 + (seed % 9)}-15`,
       attendance,
       savings,
