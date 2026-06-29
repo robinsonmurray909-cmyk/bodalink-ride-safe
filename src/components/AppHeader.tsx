@@ -5,7 +5,8 @@ import { session, type User } from "@/lib/bodalink-data";
 import { Button } from "@/components/ui/button";
 
 export function AppHeader({ user }: { user?: User | null }) {
-  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const transparentRoute = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
