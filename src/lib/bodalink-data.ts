@@ -80,7 +80,7 @@ function generateMembers(groupId: string, region: string, start: number, count: 
       attendance,
       savings,
       targetSavings,
-    } as unknown as Member;
+    } as Member;
   }).map((m, i) => {
     const r = rand(start + i + 99);
     return { ...m, status: r > 0.95 ? "suspended" : "active" } as Member;
