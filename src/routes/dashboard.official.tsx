@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { store, session, attendanceRate, attendanceLevel, savingsTotal, type Member } from "@/lib/bodalink-data";
-import { UserPlus, Pause, Trash2, Users, Wallet, Calendar } from "lucide-react";
+import { store, session, attendanceRate, attendanceLevel, savingsTotal, contributionsTotal, type Member } from "@/lib/bodalink-data";
+import { UserPlus, Pause, Trash2, Users, Wallet, Calendar, HandCoins, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/official")({
