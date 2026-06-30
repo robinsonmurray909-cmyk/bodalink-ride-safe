@@ -22,7 +22,7 @@ export function AppFooter() {
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link to="/features" className="hover:text-primary">Features</Link></li>
               <li><Link to="/about" className="hover:text-primary">About</Link></li>
-              <li><Link to="/login" className="hover:text-primary">Sign in</Link></li>
+              <li><Link to="/auth" className="hover:text-primary">Sign in</Link></li>
             </ul>
           </div>
           <div>
