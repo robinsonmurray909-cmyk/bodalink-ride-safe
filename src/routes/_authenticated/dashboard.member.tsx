@@ -40,7 +40,7 @@ function MemberDashboard() {
     );
   }
 
-  const records = data.records ?? [];
+  const records = (data.records ?? []) as any[];
   const recent = records.slice(0, 12);
   const att = attendancePct(recent);
   const lvl = attendanceLevel(att);

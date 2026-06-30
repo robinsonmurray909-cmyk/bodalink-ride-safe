@@ -266,7 +266,7 @@ function OfficialDashboard() {
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex justify-end gap-2">
-                            <Button size="sm" onClick={() => { setRecord({ ...record, week_start: todayMonday() }); setRecordFor(m); }}>
+                            <Button size="sm" onClick={() => { setRecord({ ...record, week_start: todayMonday() }); setRecordFor(m as GroupMember); }}>
                               <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Record week
                             </Button>
                             {m.status === "active" ? (
