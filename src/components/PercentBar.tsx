@@ -1,6 +1,6 @@
-interface Props { value: number; label?: string; }
+interface Props { value: number; label?: string; className?: string; }
 
-export function PercentBar({ value, label }: Props) {
+export function PercentBar({ value, label, className }: Props) {
   const level = value >= 80 ? "good" : value >= 60 ? "medium" : "poor";
   const colorVar =
     level === "good" ? "var(--color-success)" :
@@ -10,7 +10,7 @@ export function PercentBar({ value, label }: Props) {
     level === "good" ? "Good" : level === "medium" ? "Watch" : "Critical";
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${className ?? ""}`}>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm font-medium text-foreground">{label ?? "Progress"}</span>
         <span className="text-sm font-display font-bold tabular-nums" style={{ color: colorVar }}>
