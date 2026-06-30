@@ -153,15 +153,15 @@ export const claimGroupAsOfficial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ group_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { data: group } = await supabase.from("groups").select("official_id").eq("id", data.group_id).maybeSingle();
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: group } = await supabaseAdmin.from("groups").select("official_id").eq("id", data.group_id).maybeSingle();
     if (!group) throw new Error("Group not found");
     if (group.official_id && group.official_id !== userId) {
       throw new Error("This group already has a registered official");
     }
-    const { error: gErr } = await supabase.from("groups").update({ official_id: userId }).eq("id", data.group_id);
+    const { error: gErr } = await supabaseAdmin.from("groups").update({ official_id: userId }).eq("id", data.group_id);
     if (gErr) throw new Error(gErr.message);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "official" }, { onConflict: "user_id,role" });
     return { ok: true };
   });
