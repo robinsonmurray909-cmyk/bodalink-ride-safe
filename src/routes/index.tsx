@@ -45,7 +45,7 @@ function Landing() {
               BodaLink replaces notebooks and receipt books with one secure platform — manage members, track weekly savings, monitor attendance, and keep every group accountable.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/login"><Button size="lg" className="text-base px-7 shadow-[var(--shadow-glow)]">Sign in to your group</Button></Link>
+              <Link to="/auth"><Button size="lg" className="text-base px-7 shadow-[var(--shadow-glow)]">Sign in to your group</Button></Link>
               <Link to="/features"><Button size="lg" variant="outline" className="text-base px-7 border-white/40 bg-white/5 text-white hover:bg-white/15">Explore features</Button></Link>
             </div>
             <div className="mt-10 flex flex-wrap items-center gap-8 text-sm text-white/70">
@@ -130,7 +130,7 @@ function Landing() {
           <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight">Ready to ditch the notebook?</h2>
           <p className="mt-4 text-lg text-muted-foreground">Sign in with a demo account and explore each role.</p>
           <div className="mt-8">
-            <Link to="/login"><Button size="lg" className="text-base px-8 shadow-[var(--shadow-glow)]">Enter the platform</Button></Link>
+            <Link to="/auth"><Button size="lg" className="text-base px-8 shadow-[var(--shadow-glow)]">Enter the platform</Button></Link>
           </div>
         </div>
       </section>
