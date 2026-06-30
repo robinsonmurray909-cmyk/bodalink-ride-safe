@@ -14,16 +14,303 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      development_logs: {
+        Row: {
+          amount_kes: number
+          created_at: string
+          description: string | null
+          group_id: string
+          id: string
+          log_date: string
+          recorded_by: string | null
+          title: string
+        }
+        Insert: {
+          amount_kes?: number
+          created_at?: string
+          description?: string | null
+          group_id: string
+          id?: string
+          log_date?: string
+          recorded_by?: string | null
+          title: string
+        }
+        Update: {
+          amount_kes?: number
+          created_at?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          log_date?: string
+          recorded_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_logs_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          created_at: string
+          full_name: string
+          group_id: string
+          id: string
+          joined_at: string
+          national_id: string
+          phone: string
+          plate: string
+          status: string
+          target_contributions: number
+          target_savings: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          group_id: string
+          id?: string
+          joined_at?: string
+          national_id: string
+          phone: string
+          plate: string
+          status?: string
+          target_contributions?: number
+          target_savings?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          group_id?: string
+          id?: string
+          joined_at?: string
+          national_id?: string
+          phone?: string
+          plate?: string
+          status?: string
+          target_contributions?: number
+          target_savings?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          official_id: string | null
+          region: string
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          official_id?: string | null
+          region: string
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          official_id?: string | null
+          region?: string
+          stage?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          region: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+          phone?: string | null
+          region?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          region?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_records: {
+        Row: {
+          attendance: string
+          contribution_kes: number
+          created_at: string
+          development_kes: number
+          group_id: string
+          id: string
+          member_id: string
+          recorded_by: string | null
+          savings_kes: number
+          week_start: string
+        }
+        Insert: {
+          attendance: string
+          contribution_kes?: number
+          created_at?: string
+          development_kes?: number
+          group_id: string
+          id?: string
+          member_id: string
+          recorded_by?: string | null
+          savings_kes?: number
+          week_start: string
+        }
+        Update: {
+          attendance?: string
+          contribution_kes?: number
+          created_at?: string
+          development_kes?: number
+          group_id?: string
+          id?: string
+          member_id?: string
+          recorded_by?: string | null
+          savings_kes?: number
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_records_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_records_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      welfare_events: {
+        Row: {
+          amount_kes: number
+          beneficiary_member_id: string | null
+          category: string
+          created_at: string
+          details: string | null
+          event_date: string
+          group_id: string
+          id: string
+          recorded_by: string | null
+          title: string
+        }
+        Insert: {
+          amount_kes?: number
+          beneficiary_member_id?: string | null
+          category: string
+          created_at?: string
+          details?: string | null
+          event_date?: string
+          group_id: string
+          id?: string
+          recorded_by?: string | null
+          title: string
+        }
+        Update: {
+          amount_kes?: number
+          beneficiary_member_id?: string | null
+          category?: string
+          created_at?: string
+          details?: string | null
+          event_date?: string
+          group_id?: string
+          id?: string
+          recorded_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "welfare_events_beneficiary_member_id_fkey"
+            columns: ["beneficiary_member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "welfare_events_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_group_official: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "main" | "official" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +437,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["main", "official", "member"],
+    },
   },
 } as const
