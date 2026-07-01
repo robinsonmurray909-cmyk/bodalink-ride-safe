@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bike } from "lucide-react";
+import { Bike, Mail, Phone } from "lucide-react";
 
 export function AppFooter() {
   return (
@@ -26,16 +26,17 @@ export function AppFooter() {
             </ul>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-widest text-secondary-foreground/60">Contact</div>
+            <div className="text-xs uppercase tracking-widest text-secondary-foreground/60">Developed by</div>
             <ul className="mt-3 space-y-2 text-sm text-secondary-foreground/80">
-              <li>Nairobi, Kenya</li>
-              <li>+254 700 000 000</li>
-              <li>hello@bodalink.co.ke</li>
+              <li className="font-semibold text-secondary-foreground">DanjumaKE</li>
+              <li className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> <a href="tel:+254115329454" className="hover:text-primary">+254 115 329 454</a></li>
+              <li className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> <a href="mailto:jumadaniel627@gmail.com" className="hover:text-primary">jumadaniel627@gmail.com</a></li>
             </ul>
           </div>
         </div>
-        <div className="mt-10 border-t border-secondary-foreground/10 pt-6 text-xs text-secondary-foreground/60">
-          © {new Date().getFullYear()} BodaLink. Built for the riders of Kenya.
+        <div className="mt-10 border-t border-secondary-foreground/10 pt-6 text-xs text-secondary-foreground/60 flex flex-wrap items-center justify-between gap-2">
+          <span>© {new Date().getFullYear()} BodaLink. Built for the riders of Kenya.</span>
+          <span>Developed by <span className="font-semibold text-secondary-foreground/80">DanjumaKE</span></span>
         </div>
       </div>
     </footer>
