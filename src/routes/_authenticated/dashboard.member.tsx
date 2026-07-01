@@ -1,14 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth, primaryRole } from "@/hooks/use-auth";
-import { getMyOverview } from "@/lib/bodalink.functions";
+import { getMyOverview, requestWelfarePayment } from "@/lib/bodalink.functions";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { PercentBar } from "@/components/PercentBar";
-import { attendancePct, attendanceLevel } from "@/lib/bodalink-types";
-import { Calendar, Wallet, HandCoins, HeartPulse, Hammer, Phone, MapPin } from "lucide-react";
+import { attendancePct, attendanceLevel, safePct, type PaymentSource, type WelfareEvent } from "@/lib/bodalink-types";
+import { Calendar, Wallet, HandCoins, HeartPulse, Hammer, Phone, MapPin, CreditCard } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/member")({
   component: MemberDashboard,
@@ -17,7 +24,10 @@ export const Route = createFileRoute("/_authenticated/dashboard/member")({
 function MemberDashboard() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const fetchOverview = useServerFn(getMyOverview);
+  const payFn = useServerFn(requestWelfarePayment);
+
   const { data, isLoading } = useQuery({
     queryKey: ["member-overview", auth.user?.id],
     queryFn: () => fetchOverview(),
@@ -30,6 +40,9 @@ function MemberDashboard() {
     }
   }, [auth, navigate]);
 
+  const [payFor, setPayFor] = useState<WelfareEvent | null>(null);
+  const [payForm, setPayForm] = useState({ amount_kes: "", source: "savings" as PaymentSource, notes: "" });
+
   if (isLoading || !data) return <div className="text-muted-foreground">Loading your group…</div>;
   if (!data.member) {
     return (
@@ -41,15 +54,39 @@ function MemberDashboard() {
   }
 
   const records = (data.records ?? []) as any[];
+  const adjustments = (data.adjustments ?? []) as any[];
+  const contributions = (data.contributions ?? []) as any[];
   const recent = records.slice(0, 12);
   const att = attendancePct(recent);
   const lvl = attendanceLevel(att);
 
-  const savings = records.reduce((s, r) => s + (r.savings_kes || 0), 0);
-  const contributions = records.reduce((s, r) => s + (r.contribution_kes || 0), 0);
+  const savingsGross = records.reduce((s, r) => s + (r.savings_kes || 0), 0);
+  const savingsAdj = adjustments.reduce((s, a) => s + (a.amount_kes || 0), 0);
+  const savings = savingsGross + savingsAdj;
+  const contributions_total = records.reduce((s, r) => s + (r.contribution_kes || 0), 0)
+    + contributions.filter(c => c.status === "approved").reduce((s, c) => s + c.amount_kes, 0);
   const development = records.reduce((s, r) => s + (r.development_kes || 0), 0);
-  const sPct = Math.min(100, Math.round((savings / (data.member.target_savings || 1)) * 100));
-  const cPct = Math.min(100, Math.round((contributions / (data.member.target_contributions || 1)) * 100));
+  const sPct = safePct(savings, data.member.target_savings);
+  const cPct = safePct(contributions_total, data.member.target_contributions);
+
+  const submitPay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!payFor) return;
+    try {
+      await payFn({ data: {
+        welfare_event_id: payFor.id,
+        amount_kes: parseInt(payForm.amount_kes || "0", 10),
+        source: payForm.source,
+        notes: payForm.notes || null,
+      }});
+      toast.success(payForm.source === "savings"
+        ? "Request sent to official — they will deduct from your savings."
+        : "Payment recorded. Complete the transfer and the official will confirm.");
+      setPayFor(null);
+      setPayForm({ amount_kes: "", source: "savings", notes: "" });
+      qc.invalidateQueries({ queryKey: ["member-overview"] });
+    } catch (err: any) { toast.error(err.message); }
+  };
 
   return (
     <div className="space-y-6">
@@ -80,11 +117,11 @@ function MemberDashboard() {
           <div className="flex items-center justify-between"><div className="text-xs uppercase tracking-wider text-muted-foreground">Personal savings</div><Wallet className="h-4 w-4 text-brand-green" /></div>
           <div className="mt-2 font-display text-3xl font-bold tabular-nums">KES {savings.toLocaleString()}</div>
           <PercentBar value={sPct} className="mt-3" />
-          <div className="mt-1 text-xs text-muted-foreground">Target KES {data.member.target_savings.toLocaleString()}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Target KES {data.member.target_savings.toLocaleString()}{savingsAdj !== 0 && ` · Adjustments KES ${savingsAdj.toLocaleString()}`}</div>
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between"><div className="text-xs uppercase tracking-wider text-primary font-semibold">Group dev. (mandatory)</div><HandCoins className="h-4 w-4 text-brand-green" /></div>
-          <div className="mt-2 font-display text-3xl font-bold tabular-nums">KES {contributions.toLocaleString()}</div>
+          <div className="mt-2 font-display text-3xl font-bold tabular-nums">KES {contributions_total.toLocaleString()}</div>
           <PercentBar value={cPct} className="mt-3" />
           <div className="mt-1 text-xs text-muted-foreground">Target KES {data.member.target_contributions.toLocaleString()} · weekly dev. levy YTD: KES {development.toLocaleString()}</div>
         </Card>
@@ -93,22 +130,33 @@ function MemberDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-6">
           <h3 className="font-display font-bold flex items-center gap-2"><HeartPulse className="h-4 w-4 text-destructive" /> Welfare cases</h3>
-          <p className="text-xs text-muted-foreground">Death, accident or illness support handled by the group.</p>
+          <p className="text-xs text-muted-foreground">Tap Pay to contribute from your savings or via M-Pesa/card/bank.</p>
           <div className="mt-4 space-y-3">
             {(data.welfare ?? []).length === 0 && <div className="text-sm text-muted-foreground">No welfare events recorded.</div>}
-            {(data.welfare ?? []).map((w: any) => (
-              <div key={w.id} className="border border-border rounded-lg p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="font-semibold">{w.title}</div>
-                  <Badge variant="outline" className="capitalize">{w.category}</Badge>
+            {(data.welfare ?? []).map((w: any) => {
+              const collected = w.collected_kes || 0;
+              const target = w.amount_kes || 0;
+              const progress = safePct(collected, target);
+              return (
+                <div key={w.id} className="border border-border rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="font-semibold">{w.title}</div>
+                    <Badge variant="outline" className="capitalize">{w.category}</Badge>
+                  </div>
+                  {w.details && <p className="mt-1 text-sm text-muted-foreground">{w.details}</p>}
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{w.event_date}</span>
+                    <span className="font-semibold">KES {collected.toLocaleString()} / {target.toLocaleString()}</span>
+                  </div>
+                  {target > 0 && <PercentBar value={progress} className="mt-2" />}
+                  <div className="mt-3 flex justify-end">
+                    <Button size="sm" onClick={() => { setPayFor(w); setPayForm({ amount_kes: "", source: "savings", notes: "" }); }}>
+                      <CreditCard className="h-3.5 w-3.5 mr-1" /> Pay
+                    </Button>
+                  </div>
                 </div>
-                {w.details && <p className="mt-1 text-sm text-muted-foreground">{w.details}</p>}
-                <div className="mt-2 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">{w.event_date}</span>
-                  <span className="font-semibold">KES {w.amount_kes.toLocaleString()}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 
@@ -130,6 +178,38 @@ function MemberDashboard() {
           </div>
         </Card>
       </div>
+
+      {contributions.length > 0 && (
+        <Card className="p-6">
+          <h3 className="font-display font-bold">Your welfare payments</h3>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="text-left py-2">Date</th>
+                  <th className="text-left py-2">Source</th>
+                  <th className="text-right py-2">Amount</th>
+                  <th className="text-left py-2 pl-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contributions.map(c => (
+                  <tr key={c.id} className="border-b border-border/60">
+                    <td className="py-2">{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td className="py-2 capitalize">{c.source}</td>
+                    <td className="py-2 text-right tabular-nums">KES {c.amount_kes.toLocaleString()}</td>
+                    <td className="py-2 pl-3">
+                      {c.status === "pending" && <Badge variant="outline">Pending</Badge>}
+                      {c.status === "approved" && <Badge variant="outline" className="bg-success/15 text-success border-success/20">Approved</Badge>}
+                      {c.status === "rejected" && <Badge variant="destructive">Rejected</Badge>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <Card className="p-6">
         <h3 className="font-display font-bold">Your weekly records</h3>
@@ -159,6 +239,42 @@ function MemberDashboard() {
           </table>
         </div>
       </Card>
+
+      <Dialog open={!!payFor} onOpenChange={(v) => { if (!v) setPayFor(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Contribute to: {payFor?.title}</DialogTitle></DialogHeader>
+          <form onSubmit={submitPay} className="space-y-3">
+            <div className="space-y-1">
+              <Label>Payment source</Label>
+              <Select value={payForm.source} onValueChange={(v: PaymentSource) => setPayForm({ ...payForm, source: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="savings">Deduct from my savings (KES {savings.toLocaleString()} available)</SelectItem>
+                  <SelectItem value="mpesa">M-Pesa (record now, official confirms)</SelectItem>
+                  <SelectItem value="card">Card (record now, official confirms)</SelectItem>
+                  <SelectItem value="bank">Bank transfer</SelectItem>
+                  <SelectItem value="paypal">PayPal</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                </SelectContent>
+              </Select>
+              {payForm.source !== "savings" && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ask your group official for the {payForm.source} details. Real gateway integration is coming — for now this is logged as a request.
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Amount (KES)</Label>
+              <Input type="number" min="1" required value={payForm.amount_kes} onChange={e => setPayForm({ ...payForm, amount_kes: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>Notes (optional)</Label>
+              <Textarea rows={2} value={payForm.notes} onChange={e => setPayForm({ ...payForm, notes: e.target.value })} placeholder="M-Pesa reference, etc." />
+            </div>
+            <DialogFooter><Button type="submit" className="w-full">Submit payment</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

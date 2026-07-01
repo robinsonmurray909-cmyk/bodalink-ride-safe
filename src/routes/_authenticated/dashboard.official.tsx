@@ -6,6 +6,7 @@ import { useAuth, primaryRole } from "@/hooks/use-auth";
 import {
   getOfficialOverview, addMember, updateMemberStatus,
   recordWeek, logWelfare, logDevelopment,
+  approveWelfarePayment, rejectWelfarePayment, recordExternalWelfarePayment,
 } from "@/lib/bodalink.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { UserPlus, ClipboardCheck, HeartPulse, Hammer, Pause, Trash2, Users, Wallet, Calendar, HandCoins } from "lucide-react";
+import { UserPlus, ClipboardCheck, HeartPulse, Hammer, Pause, Trash2, Users, Wallet, Calendar, HandCoins, CheckCircle2, XCircle, PiggyBank } from "lucide-react";
 import { toast } from "sonner";
-import type { GroupMember } from "@/lib/bodalink-types";
+import type { GroupMember, PaymentSource } from "@/lib/bodalink-types";
 
 export const Route = createFileRoute("/_authenticated/dashboard/official")({
   component: OfficialDashboard,
@@ -42,6 +43,9 @@ function OfficialDashboard() {
   const recordFn = useServerFn(recordWeek);
   const welfareFn = useServerFn(logWelfare);
   const devFn = useServerFn(logDevelopment);
+  const approveFn = useServerFn(approveWelfarePayment);
+  const rejectFn = useServerFn(rejectWelfarePayment);
+  const externalPayFn = useServerFn(recordExternalWelfarePayment);
 
   const { data, isLoading } = useQuery({
     queryKey: ["official-overview", auth.user?.id],
@@ -55,13 +59,15 @@ function OfficialDashboard() {
   }, [auth, navigate]);
 
   const [openAdd, setOpenAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ full_name: "", phone: "", national_id: "", plate: "" });
+  const [addForm, setAddForm] = useState({ full_name: "", phone: "", national_id: "", plate: "", target_savings: "52000", target_contributions: "26000" });
   const [recordFor, setRecordFor] = useState<GroupMember | null>(null);
   const [record, setRecord] = useState({ attendance: "present" as "present"|"apology"|"absent", savings_kes: "", contribution_kes: "", development_kes: "", week_start: todayMonday() });
   const [openWelfare, setOpenWelfare] = useState(false);
   const [welfare, setWelfare] = useState({ category: "death" as const, title: "", details: "", amount_kes: "", event_date: new Date().toISOString().slice(0,10), beneficiary_member_id: "" });
   const [openDev, setOpenDev] = useState(false);
   const [dev, setDev] = useState({ title: "", description: "", amount_kes: "", log_date: new Date().toISOString().slice(0,10) });
+  const [openExtPay, setOpenExtPay] = useState<{ eventId: string; eventTitle: string } | null>(null);
+  const [extPay, setExtPay] = useState({ member_id: "", amount_kes: "", source: "mpesa" as Exclude<PaymentSource, "savings">, notes: "" });
 
   if (isLoading || !data) return <div className="text-muted-foreground">Loading your group…</div>;
   if (!data.group) {
@@ -77,13 +83,10 @@ function OfficialDashboard() {
   const members = data.members ?? [];
   const records = data.records ?? [];
 
-  const totals = members.reduce((acc, m) => {
-    const mr = records.filter((r: any) => r.member_id === m.id);
-    acc.savings += mr.reduce((s: number, r: any) => s + r.savings_kes, 0);
-    acc.contrib += mr.reduce((s: number, r: any) => s + r.contribution_kes, 0);
-    acc.dev += mr.reduce((s: number, r: any) => s + r.development_kes, 0);
-    return acc;
-  }, { savings: 0, contrib: 0, dev: 0 });
+  const contributions = data.contributions ?? [];
+  const pending = contributions.filter((c: any) => c.status === "pending");
+  const memberById = (mid: string) => members.find(m => m.id === mid);
+  const welfareById = (wid: string) => (data.welfare ?? []).find((w: any) => w.id === wid);
 
   const memberAttendance = (mid: string) => {
     const last = records.filter((r: any) => r.member_id === mid).slice(0, 12);
@@ -98,8 +101,20 @@ function OfficialDashboard() {
 
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    try { await addMemberFn({ data: { ...addForm, group_id: group.id } }); toast.success("Member added"); setOpenAdd(false); setAddForm({ full_name: "", phone: "", national_id: "", plate: "" }); refresh(); }
-    catch (err: any) { toast.error(err.message); }
+    try {
+      const ts = parseInt(addForm.target_savings || "0", 10);
+      const tc = parseInt(addForm.target_contributions || "0", 10);
+      await addMemberFn({ data: {
+        full_name: addForm.full_name, phone: addForm.phone, national_id: addForm.national_id, plate: addForm.plate,
+        group_id: group.id,
+        target_savings: ts > 0 ? ts : undefined,
+        target_contributions: tc > 0 ? tc : undefined,
+      }});
+      toast.success("Member added");
+      setOpenAdd(false);
+      setAddForm({ full_name: "", phone: "", national_id: "", plate: "", target_savings: "52000", target_contributions: "26000" });
+      refresh();
+    } catch (err: any) { toast.error(err.message); }
   };
   const submitRecord = async (e: React.FormEvent) => {
     e.preventDefault(); if (!recordFor) return;
@@ -139,6 +154,32 @@ function OfficialDashboard() {
       }});
       toast.success("Development update posted"); setOpenDev(false);
       setDev({ title: "", description: "", amount_kes: "", log_date: new Date().toISOString().slice(0,10) });
+      refresh();
+    } catch (err: any) { toast.error(err.message); }
+  };
+
+  const approve = async (id: string) => {
+    try { await approveFn({ data: { contribution_id: id } }); toast.success("Payment approved"); refresh(); }
+    catch (err: any) { toast.error(err.message); }
+  };
+  const reject = async (id: string) => {
+    try { await rejectFn({ data: { contribution_id: id } }); toast.success("Payment rejected"); refresh(); }
+    catch (err: any) { toast.error(err.message); }
+  };
+  const submitExtPay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!openExtPay) return;
+    try {
+      await externalPayFn({ data: {
+        welfare_event_id: openExtPay.eventId,
+        member_id: extPay.member_id,
+        amount_kes: parseInt(extPay.amount_kes || "0", 10),
+        source: extPay.source,
+        notes: extPay.notes || null,
+      }});
+      toast.success("Payment recorded");
+      setOpenExtPay(null);
+      setExtPay({ member_id: "", amount_kes: "", source: "mpesa", notes: "" });
       refresh();
     } catch (err: any) { toast.error(err.message); }
   };
@@ -211,6 +252,10 @@ function OfficialDashboard() {
                   <Input required placeholder="Phone (+254…)" value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} />
                   <Input required placeholder="National ID" value={addForm.national_id} onChange={e => setAddForm({ ...addForm, national_id: e.target.value })} />
                   <Input required placeholder="Motorcycle plate" value={addForm.plate} onChange={e => setAddForm({ ...addForm, plate: e.target.value })} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label className="text-xs">Savings target (KES/yr)</Label><Input type="number" min="0" value={addForm.target_savings} onChange={e => setAddForm({ ...addForm, target_savings: e.target.value })} /></div>
+                    <div className="space-y-1"><Label className="text-xs">Group dev. target (KES/yr)</Label><Input type="number" min="0" value={addForm.target_contributions} onChange={e => setAddForm({ ...addForm, target_contributions: e.target.value })} /></div>
+                  </div>
                   <DialogFooter><Button type="submit" className="w-full">Register</Button></DialogFooter>
                 </form>
               </DialogContent>
@@ -220,16 +265,21 @@ function OfficialDashboard() {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={Users} label="Members" value={members.length.toString()} />
-        <Stat icon={Calendar} label="Weeks recorded" value={records.length.toString()} />
-        <Stat icon={Wallet} label="Group savings" value={`KES ${(totals.savings / 1000).toFixed(0)}K`} />
-        <Stat icon={HandCoins} label="Group dev. fund" value={`KES ${(totals.contrib / 1000).toFixed(0)}K`} />
+        <Stat icon={Users} label="Active members" value={(data.totals?.members ?? members.length).toString()} />
+        <Stat icon={Calendar} label="Weekly records" value={(data.totals?.weekly_records ?? records.length).toString()} />
+        <Stat icon={Wallet} label="Group savings" value={`KES ${(data.totals?.savings ?? 0).toLocaleString()}`} />
+        <Stat icon={HandCoins} label="Group dev. fund" value={`KES ${(data.totals?.group_dev_fund ?? 0).toLocaleString()}`} />
+        <Stat icon={Hammer} label="Weekly dev. levy" value={`KES ${(data.totals?.dev_levy ?? 0).toLocaleString()}`} />
+        <Stat icon={HeartPulse} label="Welfare paid out" value={`KES ${(data.totals?.welfare_paid ?? 0).toLocaleString()}`} />
+        <Stat icon={PiggyBank} label="Welfare collected" value={`KES ${(data.totals?.welfare_collected ?? 0).toLocaleString()}`} />
+        <Stat icon={CheckCircle2} label="Fund available" value={`KES ${((data.totals?.group_dev_fund ?? 0) - (data.totals?.welfare_paid ?? 0)).toLocaleString()}`} />
       </div>
 
       <Tabs defaultValue="members">
         <TabsList>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="welfare">Welfare ({data.welfare?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="payments">Pending payments ({data.totals?.pending_contributions ?? 0})</TabsTrigger>
           <TabsTrigger value="dev">Developments ({data.dev?.length ?? 0})</TabsTrigger>
         </TabsList>
 
@@ -299,11 +349,43 @@ function OfficialDashboard() {
               </div>
               <div className="mt-2 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">{w.event_date}</span>
-                <span className="font-semibold tabular-nums">KES {w.amount_kes.toLocaleString()}</span>
+                <span className="font-semibold tabular-nums">Collected KES {(w.collected_kes ?? 0).toLocaleString()} / target {w.amount_kes.toLocaleString()}</span>
+              </div>
+              <div className="mt-3 flex justify-end">
+                <Button size="sm" variant="outline" onClick={() => setOpenExtPay({ eventId: w.id, eventTitle: w.title })}>
+                  <PiggyBank className="h-3.5 w-3.5 mr-1" /> Record external payment
+                </Button>
               </div>
             </Card>
           ))}
           {(data.welfare ?? []).length === 0 && <Card className="p-6 text-center text-muted-foreground">No welfare events yet.</Card>}
+        </TabsContent>
+
+        <TabsContent value="payments" className="mt-4 space-y-3">
+          {pending.length === 0 && <Card className="p-6 text-center text-muted-foreground">No pending payment requests.</Card>}
+          {pending.map((c: any) => {
+            const m = memberById(c.member_id);
+            const w = welfareById(c.welfare_event_id);
+            return (
+              <Card key={c.id} className="p-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="font-semibold">{m?.full_name ?? "Unknown member"}</div>
+                    <div className="text-xs text-muted-foreground">for: {w?.title ?? "—"}</div>
+                    {c.notes && <p className="text-sm text-muted-foreground mt-1">{c.notes}</p>}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-display text-xl font-bold tabular-nums">KES {c.amount_kes.toLocaleString()}</div>
+                    <Badge variant="outline" className="capitalize mt-1">{c.source}</Badge>
+                  </div>
+                </div>
+                <div className="mt-3 flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => reject(c.id)}><XCircle className="h-3.5 w-3.5 mr-1" /> Reject</Button>
+                  <Button size="sm" onClick={() => approve(c.id)}><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve{c.source === "savings" ? " & deduct savings" : ""}</Button>
+                </div>
+              </Card>
+            );
+          })}
         </TabsContent>
 
         <TabsContent value="dev" className="mt-4 space-y-3">
@@ -340,6 +422,37 @@ function OfficialDashboard() {
               <div className="space-y-1"><Label className="text-xs">Weekly levy</Label><Input type="number" min="0" value={record.development_kes} onChange={e => setRecord({ ...record, development_kes: e.target.value })} /></div>
             </div>
             <DialogFooter><Button type="submit" className="w-full">Save week</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!openExtPay} onOpenChange={(v) => { if (!v) setOpenExtPay(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record external payment — {openExtPay?.eventTitle}</DialogTitle></DialogHeader>
+          <form onSubmit={submitExtPay} className="space-y-3">
+            <div className="space-y-1"><Label>Member</Label>
+              <Select value={extPay.member_id} onValueChange={(v) => setExtPay({ ...extPay, member_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Choose member" /></SelectTrigger>
+                <SelectContent>{members.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1"><Label>Source</Label>
+                <Select value={extPay.source} onValueChange={(v: Exclude<PaymentSource, "savings">) => setExtPay({ ...extPay, source: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mpesa">M-Pesa</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="paypal">PayPal</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1"><Label>Amount (KES)</Label><Input type="number" min="1" required value={extPay.amount_kes} onChange={e => setExtPay({ ...extPay, amount_kes: e.target.value })} /></div>
+            </div>
+            <div className="space-y-1"><Label>Reference / notes</Label><Textarea rows={2} value={extPay.notes} onChange={e => setExtPay({ ...extPay, notes: e.target.value })} placeholder="e.g. M-Pesa code QF7X…" /></div>
+            <DialogFooter><Button type="submit" className="w-full" disabled={!extPay.member_id}>Save payment</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

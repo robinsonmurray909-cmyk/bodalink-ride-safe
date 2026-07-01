@@ -7,7 +7,7 @@ import { getMainOverview } from "@/lib/bodalink.functions";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, MapPin, Shield } from "lucide-react";
+import { Search, Users, MapPin, Shield, Wallet, HandCoins, HeartPulse, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/main")({
   component: MainDashboard,
@@ -64,11 +64,56 @@ function MainDashboard() {
         </div>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Stat icon={Users} label="Total members" value={members.length.toString()} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={Users} label="Total active members" value={(data?.totals?.members ?? members.length).toString()} />
         <Stat icon={MapPin} label="Active groups" value={groups.length.toString()} />
         <Stat icon={Shield} label="Regions" value={new Set(groups.map((g: any) => g.region)).size.toString()} />
+        <Stat icon={Calendar} label="Weekly records" value={(data?.totals?.weekly_records ?? 0).toString()} />
+        <Stat icon={Wallet} label="Total savings" value={`KES ${(data?.totals?.savings ?? 0).toLocaleString()}`} />
+        <Stat icon={HandCoins} label="Group dev. fund" value={`KES ${(data?.totals?.group_dev_fund ?? 0).toLocaleString()}`} />
+        <Stat icon={HeartPulse} label="Welfare paid out" value={`KES ${(data?.totals?.welfare_paid ?? 0).toLocaleString()}`} />
+        <Stat icon={Shield} label="Weekly dev. levy" value={`KES ${(data?.totals?.dev_levy ?? 0).toLocaleString()}`} />
       </div>
+
+      <Card className="p-6">
+        <h2 className="font-display text-lg font-bold">All groups — breakdown</h2>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="text-left py-2">Group</th>
+                <th className="text-left py-2">Region</th>
+                <th className="text-right py-2">Members</th>
+                <th className="text-right py-2">Savings</th>
+                <th className="text-right py-2">Dev. fund</th>
+                <th className="text-right py-2">Welfare paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groups.map((g: any) => {
+                const gm = members.filter((m: any) => m.group_id === g.id && m.status === "active");
+                const gr = (data?.records ?? []).filter((r: any) => r.group_id === g.id);
+                const gAdj = (data?.adjustments ?? []).filter((a: any) => a.group_id === g.id);
+                const gWc = (data?.contributions ?? []).filter((c: any) => c.group_id === g.id && c.status === "approved");
+                const gWf = (data?.welfare ?? []).filter((w: any) => w.group_id === g.id);
+                const sav = gr.reduce((s: number, r: any) => s + (r.savings_kes || 0), 0) + gAdj.reduce((s: number, a: any) => s + (a.amount_kes || 0), 0);
+                const fund = gr.reduce((s: number, r: any) => s + (r.contribution_kes || 0), 0) + gWc.reduce((s: number, c: any) => s + c.amount_kes, 0);
+                const wpaid = gWf.reduce((s: number, w: any) => s + (w.amount_kes || 0), 0);
+                return (
+                  <tr key={g.id} className="border-b border-border/60">
+                    <td className="py-2 font-medium">{g.name}</td>
+                    <td className="py-2 text-muted-foreground">{g.region}</td>
+                    <td className="py-2 text-right tabular-nums">{gm.length}</td>
+                    <td className="py-2 text-right tabular-nums">KES {sav.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">KES {fund.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">KES {wpaid.toLocaleString()}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       <Card className="p-6">
         <h2 className="font-display text-lg font-bold">Search any rider</h2>

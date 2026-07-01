@@ -49,7 +49,34 @@ export interface WelfareEvent {
   title: string;
   details: string | null;
   amount_kes: number;
+  collected_kes: number;
   event_date: string;
+  created_at: string;
+}
+
+export type PaymentSource = "savings" | "mpesa" | "card" | "bank" | "paypal" | "cash";
+export type ContributionStatus = "pending" | "approved" | "rejected";
+
+export interface WelfareContribution {
+  id: string;
+  welfare_event_id: string;
+  member_id: string;
+  group_id: string;
+  amount_kes: number;
+  source: PaymentSource;
+  status: ContributionStatus;
+  notes: string | null;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface SavingsAdjustment {
+  id: string;
+  member_id: string;
+  group_id: string;
+  amount_kes: number; // negative = deduction, positive = credit
+  reason: string;
+  welfare_contribution_id: string | null;
   created_at: string;
 }
 
@@ -74,4 +101,10 @@ export function attendanceLevel(pct: number): "good" | "medium" | "poor" {
   if (pct >= 80) return "good";
   if (pct >= 60) return "medium";
   return "poor";
+}
+
+export function safePct(value: number, target: number): number {
+  if (!target || target <= 0) return 0;
+  const pct = Math.round((value / target) * 100);
+  return Math.max(0, Math.min(100, pct));
 }

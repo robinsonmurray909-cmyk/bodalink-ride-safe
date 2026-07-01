@@ -159,6 +159,61 @@ export type Database = {
         }
         Relationships: []
       }
+      savings_adjustments: {
+        Row: {
+          amount_kes: number
+          created_at: string
+          group_id: string
+          id: string
+          member_id: string
+          reason: string
+          recorded_by: string | null
+          welfare_contribution_id: string | null
+        }
+        Insert: {
+          amount_kes: number
+          created_at?: string
+          group_id: string
+          id?: string
+          member_id: string
+          reason: string
+          recorded_by?: string | null
+          welfare_contribution_id?: string | null
+        }
+        Update: {
+          amount_kes?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          member_id?: string
+          reason?: string
+          recorded_by?: string | null
+          welfare_contribution_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_adjustments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_adjustments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_adjustments_welfare_contribution_id_fkey"
+            columns: ["welfare_contribution_id"]
+            isOneToOne: false
+            referencedRelation: "welfare_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -234,11 +289,79 @@ export type Database = {
           },
         ]
       }
+      welfare_contributions: {
+        Row: {
+          amount_kes: number
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          group_id: string
+          id: string
+          member_id: string
+          notes: string | null
+          requested_by: string | null
+          source: string
+          status: string
+          welfare_event_id: string
+        }
+        Insert: {
+          amount_kes?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          requested_by?: string | null
+          source?: string
+          status?: string
+          welfare_event_id: string
+        }
+        Update: {
+          amount_kes?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          requested_by?: string | null
+          source?: string
+          status?: string
+          welfare_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "welfare_contributions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "welfare_contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "welfare_contributions_welfare_event_id_fkey"
+            columns: ["welfare_event_id"]
+            isOneToOne: false
+            referencedRelation: "welfare_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       welfare_events: {
         Row: {
           amount_kes: number
           beneficiary_member_id: string | null
           category: string
+          collected_kes: number
           created_at: string
           details: string | null
           event_date: string
@@ -251,6 +374,7 @@ export type Database = {
           amount_kes?: number
           beneficiary_member_id?: string | null
           category: string
+          collected_kes?: number
           created_at?: string
           details?: string | null
           event_date?: string
@@ -263,6 +387,7 @@ export type Database = {
           amount_kes?: number
           beneficiary_member_id?: string | null
           category?: string
+          collected_kes?: number
           created_at?: string
           details?: string | null
           event_date?: string
