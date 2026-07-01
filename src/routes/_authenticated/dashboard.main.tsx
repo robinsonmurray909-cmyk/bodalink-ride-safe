@@ -7,7 +7,7 @@ import { getMainOverview } from "@/lib/bodalink.functions";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, MapPin, Shield } from "lucide-react";
+import { Search, Users, MapPin, Shield, Wallet, HandCoins, HeartPulse, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/main")({
   component: MainDashboard,
