@@ -27,10 +27,14 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard" });
-    });
+    (async () => {
+      const { data: userRes } = await supabase.auth.getUser();
+      if (!userRes.user) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userRes.user.id);
+      if ((roles ?? []).length > 0) navigate({ to: "/dashboard" });
+    })();
   }, [navigate]);
+
 
   return (
     <div className="min-h-screen flex flex-col">
