@@ -425,6 +425,37 @@ function OfficialDashboard() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!openExtPay} onOpenChange={(v) => { if (!v) setOpenExtPay(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record external payment — {openExtPay?.eventTitle}</DialogTitle></DialogHeader>
+          <form onSubmit={submitExtPay} className="space-y-3">
+            <div className="space-y-1"><Label>Member</Label>
+              <Select value={extPay.member_id} onValueChange={(v) => setExtPay({ ...extPay, member_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Choose member" /></SelectTrigger>
+                <SelectContent>{members.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1"><Label>Source</Label>
+                <Select value={extPay.source} onValueChange={(v: Exclude<PaymentSource, "savings">) => setExtPay({ ...extPay, source: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mpesa">M-Pesa</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="paypal">PayPal</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1"><Label>Amount (KES)</Label><Input type="number" min="1" required value={extPay.amount_kes} onChange={e => setExtPay({ ...extPay, amount_kes: e.target.value })} /></div>
+            </div>
+            <div className="space-y-1"><Label>Reference / notes</Label><Textarea rows={2} value={extPay.notes} onChange={e => setExtPay({ ...extPay, notes: e.target.value })} placeholder="e.g. M-Pesa code QF7X…" /></div>
+            <DialogFooter><Button type="submit" className="w-full" disabled={!extPay.member_id}>Save payment</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
