@@ -299,9 +299,11 @@ export const getMainOverview = createServerFn({ method: "GET" })
       members: (members ?? []).filter(m => m.status === "active").length,
       weekly_records: recs.length,
       savings: recs.reduce((s, r) => s + (r.savings_kes || 0), 0) + adjs.reduce((s, a) => s + (a.amount_kes || 0), 0),
-      group_dev_fund: recs.reduce((s, r) => s + (r.contribution_kes || 0), 0) + wcApproved.reduce((s, c) => s + (c.amount_kes || 0), 0),
+      group_dev_fund: recs.reduce((s, r) => s + (r.contribution_kes || 0), 0),
+      welfare_contributed: wcApproved.reduce((s, c) => s + (c.amount_kes || 0), 0),
       dev_levy: recs.reduce((s, r) => s + (r.development_kes || 0), 0),
       welfare_paid: wf.reduce((s, w) => s + (w.amount_kes || 0), 0),
+      welfare_collected: wf.reduce((s, w) => s + (w.collected_kes || 0), 0),
     };
     return { groups: groups ?? [], members: members ?? [], records: recs, welfare: wf, contributions: contributions ?? [], adjustments: adjs, totals };
   });
