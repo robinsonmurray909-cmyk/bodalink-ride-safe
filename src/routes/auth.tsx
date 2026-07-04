@@ -169,7 +169,7 @@ function SignUpForm({ role, onBack }: { role: Role; onBack: () => void }) {
 
     try {
       if (role === "official") {
-        await claimGroup({ data: { group_id: form.group_id } });
+        await claimGroup({ data: { group_id: form.group_id, invite_code: form.invite_code } });
       } else if (role === "member") {
         await regMember({ data: {
           group_id: form.group_id, full_name: form.full_name,
