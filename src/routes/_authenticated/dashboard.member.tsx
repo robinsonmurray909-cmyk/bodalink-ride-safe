@@ -133,7 +133,7 @@ function MemberDashboard() {
           <h3 className="font-display font-bold flex items-center gap-2"><HeartPulse className="h-4 w-4 text-destructive" /> Welfare cases</h3>
           <p className="text-xs text-muted-foreground">Tap Pay to contribute from your savings or via M-Pesa/card/bank.</p>
           <div className="mt-4 space-y-3">
-            {(data.welfare ?? []).length === 0 && <div className="text-sm text-muted-foreground">No welfare events recorded.</div>}
+            
             {(() => {
               const openWelfare = (data.welfare ?? []).filter((w: any) => (w.collected_kes || 0) < (w.amount_kes || 0));
               if (openWelfare.length === 0) return <div className="text-sm text-muted-foreground">No open welfare cases. All contributions fully collected.</div>;
