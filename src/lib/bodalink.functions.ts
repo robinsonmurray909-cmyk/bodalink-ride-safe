@@ -312,9 +312,15 @@ export const getMainOverview = createServerFn({ method: "GET" })
 
 export const claimGroupAsOfficial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ group_id: z.string().uuid() }).parse(d))
+  .inputValidator((d) => z.object({
+    group_id: z.string().uuid(),
+    invite_code: z.string().min(4),
+  }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context;
+    const expected = process.env.OFFICIAL_CLAIM_CODE;
+    if (!expected) throw new Error("Official claim is disabled: server invite code not configured");
+    if (data.invite_code !== expected) throw new Error("Invalid official invite code");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: group } = await supabaseAdmin.from("groups").select("official_id").eq("id", data.group_id).maybeSingle();
     if (!group) throw new Error("Group not found");
@@ -352,7 +358,8 @@ export const claimMainOfficial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ invite_code: z.string().min(4) }).parse(d))
   .handler(async ({ data, context }) => {
-    const expected = process.env.MAIN_OFFICIAL_INVITE_CODE || "BODALINK-MAIN-2026";
+    const expected = process.env.MAIN_OFFICIAL_INVITE_CODE;
+    if (!expected) throw new Error("Main admin claim is disabled: server invite code not configured");
     if (data.invite_code !== expected) throw new Error("Invalid invite code");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_roles").upsert({ user_id: context.userId, role: "main" }, { onConflict: "user_id,role" });
