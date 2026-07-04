@@ -134,10 +134,16 @@ function MemberDashboard() {
           <p className="text-xs text-muted-foreground">Tap Pay to contribute from your savings or via M-Pesa/card/bank.</p>
           <div className="mt-4 space-y-3">
             {(data.welfare ?? []).length === 0 && <div className="text-sm text-muted-foreground">No welfare events recorded.</div>}
-            {(data.welfare ?? []).map((w: any) => {
+            {(() => {
+              const openWelfare = (data.welfare ?? []).filter((w: any) => (w.collected_kes || 0) < (w.amount_kes || 0));
+              if (openWelfare.length === 0) return <div className="text-sm text-muted-foreground">No open welfare cases. All contributions fully collected.</div>;
+              return openWelfare.map((w: any) => {
               const collected = w.collected_kes || 0;
               const target = w.amount_kes || 0;
               const progress = safePct(collected, target);
+              const myPaid = contributions
+                .filter(c => c.welfare_event_id === w.id && c.status === "approved")
+                .reduce((s, c) => s + c.amount_kes, 0);
               return (
                 <div key={w.id} className="border border-border rounded-lg p-3">
                   <div className="flex items-center justify-between gap-3">
@@ -147,9 +153,10 @@ function MemberDashboard() {
                   {w.details && <p className="mt-1 text-sm text-muted-foreground">{w.details}</p>}
                   <div className="mt-2 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{w.event_date}</span>
-                    <span className="font-semibold">KES {collected.toLocaleString()} / {target.toLocaleString()}</span>
+                    <span className="font-semibold">Target: KES {target.toLocaleString()}</span>
                   </div>
                   {target > 0 && <PercentBar value={progress} className="mt-2" />}
+                  <div className="mt-2 text-xs text-muted-foreground">Your contribution so far: <span className="font-semibold text-foreground">KES {myPaid.toLocaleString()}</span></div>
                   <div className="mt-3 flex justify-end">
                     <Button size="sm" onClick={() => { setPayFor(w); setPayForm({ amount_kes: "", source: "savings", notes: "" }); }}>
                       <CreditCard className="h-3.5 w-3.5 mr-1" /> Pay
@@ -157,7 +164,8 @@ function MemberDashboard() {
                   </div>
                 </div>
               );
-            })}
+            });
+            })()}
           </div>
         </Card>
 
