@@ -63,8 +63,9 @@ function MemberDashboard() {
   const savingsGross = records.reduce((s, r) => s + (r.savings_kes || 0), 0);
   const savingsAdj = adjustments.reduce((s, a) => s + (a.amount_kes || 0), 0);
   const savings = savingsGross + savingsAdj;
-  const contributions_total = records.reduce((s, r) => s + (r.contribution_kes || 0), 0)
-    + contributions.filter(c => c.status === "approved").reduce((s, c) => s + c.amount_kes, 0);
+  // Group dev is mandatory & non-refundable — comes only from weekly records, NOT welfare contributions
+  const contributions_total = records.reduce((s, r) => s + (r.contribution_kes || 0), 0);
+  const welfare_contributed_total = contributions.filter(c => c.status === "approved").reduce((s, c) => s + c.amount_kes, 0);
   const development = records.reduce((s, r) => s + (r.development_kes || 0), 0);
   const sPct = safePct(savings, data.member.target_savings);
   const cPct = safePct(contributions_total, data.member.target_contributions);
