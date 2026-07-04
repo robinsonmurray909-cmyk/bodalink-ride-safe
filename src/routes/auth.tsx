@@ -244,11 +244,18 @@ function SignUpForm({ role, onBack }: { role: Role; onBack: () => void }) {
           </>
         )}
 
+        {role === "official" && (
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Official invite code</Label>
+            <Input required value={form.invite_code} onChange={e => setForm({ ...form, invite_code: e.target.value })} placeholder="Issued by BodaLink admin" />
+            <p className="text-xs text-muted-foreground">Request this code from a BodaLink administrator.</p>
+          </div>
+        )}
+
         {role === "main" && (
           <div className="space-y-2 sm:col-span-2">
             <Label>Invite code</Label>
             <Input required value={form.invite_code} onChange={e => setForm({ ...form, invite_code: e.target.value })} placeholder="Issued by BodaLink admin" />
-            <p className="text-xs text-muted-foreground">Demo code: <span className="font-mono">BODALINK-MAIN-2026</span></p>
           </div>
         )}
       </div>
