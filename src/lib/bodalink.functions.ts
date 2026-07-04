@@ -60,6 +60,7 @@ export const getOfficialOverview = createServerFn({ method: "GET" })
     const totals = {
       members: (members ?? []).filter(m => m.status === "active").length,
       weekly_records: recs.length,
+      savings: recs.reduce((s, r) => s + (r.savings_kes || 0), 0) + adjs.reduce((s, a) => s + (a.amount_kes || 0), 0),
       // Group dev is mandatory & non-refundable — from weekly records only, NOT welfare contributions
       group_dev_fund: recs.reduce((s, r) => s + (r.contribution_kes || 0), 0),
       welfare_collected_from_savings: wcApproved.filter(c => c.source === "savings").reduce((s, c) => s + c.amount_kes, 0),
