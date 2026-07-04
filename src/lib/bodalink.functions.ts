@@ -358,7 +358,8 @@ export const claimMainOfficial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ invite_code: z.string().min(4) }).parse(d))
   .handler(async ({ data, context }) => {
-    const expected = process.env.MAIN_OFFICIAL_INVITE_CODE || "BODALINK-MAIN-2026";
+    const expected = process.env.MAIN_OFFICIAL_INVITE_CODE;
+    if (!expected) throw new Error("Main admin claim is disabled: server invite code not configured");
     if (data.invite_code !== expected) throw new Error("Invalid invite code");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_roles").upsert({ user_id: context.userId, role: "main" }, { onConflict: "user_id,role" });
