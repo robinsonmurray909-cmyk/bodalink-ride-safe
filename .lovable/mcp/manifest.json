@@ -3,12 +3,16 @@
   "sdk_version": "0.20.0",
   "path": "/mcp",
   "auth": {
-    "type": "none"
+    "type": "oauth",
+    "issuer": "https://gnnwhyzjicbgbxsnlysf.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
   },
   "mcp": {
     "server": {
       "name": "bodalink-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "BodaLink MCP"
     },
     "tools": [
@@ -52,6 +56,27 @@
           "properties": {
             "region": {
               "description": "Optional region name to filter by.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_members_by_region",
+        "title": "List members by region (main officials)",
+        "description": "Return every BodaLink member across all groups, optionally filtered by region. Restricted to authenticated users holding the `main` role.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "region": {
+              "description": "Optional region name to filter by (exact match).",
               "type": "string"
             }
           }
