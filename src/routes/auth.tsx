@@ -16,24 +16,32 @@ import { claimGroupAsOfficial, registerAsMember, claimMainOfficial } from "@/lib
 import { toast } from "sonner";
 import type { Role, Group } from "@/lib/bodalink-types";
 
+function sanitizeNext(next: unknown): string | null {
+  if (typeof next !== "string" || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({ meta: [{ title: "Sign in — BodaLink" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ next: sanitizeNext(s.next) ?? undefined }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
 
   useEffect(() => {
     (async () => {
       const { data: userRes } = await supabase.auth.getUser();
       if (!userRes.user) return;
+      if (next) { window.location.href = next; return; }
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userRes.user.id);
       if ((roles ?? []).length > 0) navigate({ to: "/dashboard" });
     })();
-  }, [navigate]);
+  }, [navigate, next]);
 
 
   return (
@@ -70,6 +78,7 @@ function SignInForm() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const { next } = Route.useSearch();
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -77,6 +86,7 @@ function SignInForm() {
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Karibu tena!");
+    if (next) { window.location.href = next; return; }
     navigate({ to: "/dashboard" });
   };
 
