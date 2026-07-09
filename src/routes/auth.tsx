@@ -112,7 +112,6 @@ function SignUpFlow() {
     const opts: { role: Role; title: string; desc: string; icon: typeof Shield }[] = [
       { role: "member", title: "Member (Rider)", desc: "You are a boda boda rider in a group.", icon: Bike },
       { role: "official", title: "Group Official", desc: "Chairman / treasurer / secretary of a group.", icon: Users },
-      { role: "main", title: "Main Official", desc: "Regional oversight. Requires an invite code.", icon: Shield },
     ];
     return (
       <div className="space-y-3">
@@ -262,12 +261,8 @@ function SignUpForm({ role, onBack }: { role: Role; onBack: () => void }) {
           </div>
         )}
 
-        {role === "main" && (
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Invite code</Label>
-            <Input required value={form.invite_code} onChange={e => setForm({ ...form, invite_code: e.target.value })} placeholder="Issued by BodaLink admin" />
-          </div>
-        )}
+        {/* Main-official self-signup is intentionally not exposed in the public UI.
+            Main admins are provisioned server-side via the claim_main_official server fn. */}
       </div>
 
       <Button type="submit" className="w-full" disabled={busy}>{busy ? "Creating…" : "Create account"}</Button>
