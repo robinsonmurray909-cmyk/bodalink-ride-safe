@@ -63,9 +63,10 @@ function MemberDashboard() {
   const savingsGross = records.reduce((s, r) => s + (r.savings_kes || 0), 0);
   const savingsAdj = adjustments.reduce((s, a) => s + (a.amount_kes || 0), 0);
   const savings = savingsGross + savingsAdj;
-  // Group dev is mandatory & non-refundable — comes only from weekly records, NOT welfare contributions
-  const contributions_total = records.reduce((s, r) => s + (r.contribution_kes || 0), 0);
+  // Group dev progress counts weekly contributions PLUS approved welfare payments the member has made
+  const weekly_contributions = records.reduce((s, r) => s + (r.contribution_kes || 0), 0);
   const welfare_contributed_total = contributions.filter(c => c.status === "approved").reduce((s, c) => s + c.amount_kes, 0);
+  const contributions_total = weekly_contributions + welfare_contributed_total;
   const development = records.reduce((s, r) => s + (r.development_kes || 0), 0);
   const sPct = safePct(savings, data.member.target_savings);
   const cPct = safePct(contributions_total, data.member.target_contributions);
@@ -121,10 +122,10 @@ function MemberDashboard() {
           <div className="mt-1 text-xs text-muted-foreground">Target KES {data.member.target_savings.toLocaleString()}{savingsAdj !== 0 && ` · Adjustments KES ${savingsAdj.toLocaleString()}`}</div>
         </Card>
         <Card className="p-5">
-          <div className="flex items-center justify-between"><div className="text-xs uppercase tracking-wider text-primary font-semibold">Group dev. (mandatory)</div><HandCoins className="h-4 w-4 text-brand-green" /></div>
+          <div className="flex items-center justify-between"><div className="text-xs uppercase tracking-wider text-primary font-semibold">Group contributions</div><HandCoins className="h-4 w-4 text-brand-green" /></div>
           <div className="mt-2 font-display text-3xl font-bold tabular-nums">KES {contributions_total.toLocaleString()}</div>
           <PercentBar value={cPct} className="mt-3" />
-          <div className="mt-1 text-xs text-muted-foreground">Target KES {data.member.target_contributions.toLocaleString()} · weekly dev. levy YTD: KES {development.toLocaleString()}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Target KES {data.member.target_contributions.toLocaleString()} · welfare paid: KES {welfare_contributed_total.toLocaleString()} · weekly levy YTD: KES {development.toLocaleString()}</div>
         </Card>
       </div>
 
