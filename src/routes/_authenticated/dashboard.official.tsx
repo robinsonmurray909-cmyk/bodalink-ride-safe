@@ -352,28 +352,56 @@ function OfficialDashboard() {
         </TabsContent>
 
         <TabsContent value="welfare" className="mt-4 space-y-3">
-          {(data.welfare ?? []).map((w: any) => (
+          {activeWelfare.map((w: any) => (
             <Card key={w.id} className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold">{w.title}</div>
-                  {w.details && <p className="text-sm text-muted-foreground mt-1">{w.details}</p>}
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold break-words">{w.title}</div>
+                  {w.details && <p className="text-sm text-muted-foreground mt-1 break-words">{w.details}</p>}
                 </div>
-                <Badge variant="outline" className="capitalize">{w.category}</Badge>
+                <Badge variant="outline" className="capitalize shrink-0">{w.category}</Badge>
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="text-muted-foreground">{w.event_date}</span>
                 <span className="font-semibold tabular-nums">Collected KES {(w.collected_kes ?? 0).toLocaleString()} / target {w.amount_kes.toLocaleString()}</span>
               </div>
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => setOpenExtPay({ eventId: w.id, eventTitle: w.title })}>
                   <PiggyBank className="h-3.5 w-3.5 mr-1" /> Record external payment
+                </Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeWelfare(w.id, w.title)}>
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
                 </Button>
               </div>
             </Card>
           ))}
-          {(data.welfare ?? []).length === 0 && <Card className="p-6 text-center text-muted-foreground">No welfare events yet.</Card>}
+          {activeWelfare.length === 0 && <Card className="p-6 text-center text-muted-foreground">No active welfare cases.</Card>}
         </TabsContent>
+
+        <TabsContent value="admin" className="mt-4 space-y-3">
+          <Card className="p-4 border-dashed text-xs text-muted-foreground">
+            Admin — permanently remove closed or historical welfare cases. Deleting a case also removes all its recorded contributions. This cannot be undone.
+          </Card>
+          {pastWelfare.length === 0 && <Card className="p-6 text-center text-muted-foreground">No past welfare cases to clean up.</Card>}
+          {pastWelfare.map((w: any) => (
+            <Card key={w.id} className="p-4">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold break-words">{w.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{w.event_date} · fully collected</div>
+                </div>
+                <Badge variant="outline" className="capitalize shrink-0">{w.category}</Badge>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground tabular-nums">Total KES {(w.collected_kes ?? 0).toLocaleString()} of {w.amount_kes.toLocaleString()}</div>
+              <div className="mt-3 flex justify-end">
+                <Button size="sm" variant="destructive" onClick={() => removeWelfare(w.id, w.title)}>
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove permanently
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </TabsContent>
+
 
         <TabsContent value="payments" className="mt-4 space-y-3">
           {pending.length === 0 && <Card className="p-6 text-center text-muted-foreground">No pending payment requests.</Card>}
