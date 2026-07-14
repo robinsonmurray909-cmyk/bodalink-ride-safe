@@ -289,11 +289,12 @@ function OfficialDashboard() {
       </div>
 
       <Tabs defaultValue="members">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="welfare">Welfare ({data.welfare?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="welfare">Welfare ({activeWelfare.length})</TabsTrigger>
           <TabsTrigger value="payments">Pending payments ({data.totals?.pending_contributions ?? 0})</TabsTrigger>
           <TabsTrigger value="dev">Developments ({data.dev?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="admin">Admin — past welfare ({pastWelfare.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="mt-4">
