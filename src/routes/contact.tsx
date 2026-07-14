@@ -22,15 +22,16 @@ function Contact() {
     <div className="min-h-screen flex flex-col">
       <AppHeader />
       <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2">
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-20 grid gap-10 lg:gap-12 lg:grid-cols-2">
           <div>
             <div className="text-xs font-semibold uppercase tracking-widest text-primary">Talk to us</div>
-            <h1 className="mt-3 font-display text-5xl font-bold tracking-tight">We'd love to hear from your group.</h1>
-            <p className="mt-4 text-muted-foreground text-lg">Onboarding a boda boda group near you? Reach out — we'll help you migrate from notebooks in a single weekend.</p>
-            <div className="mt-8 space-y-4">
-              <div className="flex items-center gap-3"><Mail className="h-5 w-5 text-primary" /> hello@bodalink.co.ke</div>
-              <div className="flex items-center gap-3"><Phone className="h-5 w-5 text-primary" /> +254 700 000 000</div>
-              <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-primary" /> Westlands, Nairobi</div>
+            <h1 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">We'd love to hear from your group.</h1>
+            <p className="mt-4 text-muted-foreground text-base sm:text-lg">Onboarding a boda boda group near you? Reach out — we'll help you migrate from notebooks in a single weekend.</p>
+            <div className="mt-8 space-y-4 text-sm sm:text-base">
+              <div className="flex items-center gap-3"><Mail className="h-5 w-5 shrink-0 text-primary" /> <a href="mailto:jumadaniel627@gmail.com" className="hover:text-primary break-all">jumadaniel627@gmail.com</a></div>
+              <div className="flex items-center gap-3"><Phone className="h-5 w-5 shrink-0 text-primary" /> <a href="tel:+254115329454" className="hover:text-primary">+254 115 329 454</a></div>
+              <div className="flex items-center gap-3"><MapPin className="h-5 w-5 shrink-0 text-primary" /> Nairobi, Kenya</div>
+              <div className="pt-2 text-xs text-muted-foreground">Built &amp; supported by <span className="font-semibold text-foreground">DanjumaKE</span></div>
             </div>
           </div>
           <form
