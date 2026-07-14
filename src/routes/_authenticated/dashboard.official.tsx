@@ -186,6 +186,17 @@ function OfficialDashboard() {
     } catch (err: any) { toast.error(err.message); }
   };
 
+  const removeWelfare = async (id: string, title: string) => {
+    if (!confirm(`Permanently delete "${title}" and all its recorded payments? This cannot be undone.`)) return;
+    try { await deleteWelfareFn({ data: { welfare_event_id: id } }); toast.success("Welfare case removed"); refresh(); }
+    catch (err: any) { toast.error(err.message); }
+  };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const allWelfare = (data.welfare ?? []) as any[];
+  const activeWelfare = allWelfare.filter(w => w.event_date >= today || (w.collected_kes ?? 0) < (w.amount_kes ?? 0));
+  const pastWelfare = allWelfare.filter(w => !(w.event_date >= today || (w.collected_kes ?? 0) < (w.amount_kes ?? 0)));
+
   return (
     <div className="space-y-6">
       <Card className="p-6 bg-secondary text-secondary-foreground border-secondary">
