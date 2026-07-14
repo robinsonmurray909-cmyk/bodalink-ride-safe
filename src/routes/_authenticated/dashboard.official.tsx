@@ -7,6 +7,7 @@ import {
   getOfficialOverview, addMember, updateMemberStatus,
   recordWeek, logWelfare, logDevelopment,
   approveWelfarePayment, rejectWelfarePayment, recordExternalWelfarePayment,
+  deleteWelfareEvent,
 } from "@/lib/bodalink.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
