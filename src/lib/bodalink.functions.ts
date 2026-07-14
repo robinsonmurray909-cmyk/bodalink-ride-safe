@@ -275,6 +275,18 @@ export const recordExternalWelfarePayment = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteWelfareEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ welfare_event_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // RLS restricts deletes to the group's official or main. Contributions cascade or must be cleared first.
+    await supabase.from("welfare_contributions").delete().eq("welfare_event_id", data.welfare_event_id);
+    const { error } = await supabase.from("welfare_events").delete().eq("id", data.welfare_event_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ============ Main official (regional oversight) ============
 
 export const getMainOverview = createServerFn({ method: "GET" })
