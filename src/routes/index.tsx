@@ -29,29 +29,29 @@ function Landing() {
           <img src={hero} alt="" width={1600} height={1100} className="h-full w-full object-cover" />
           <div className="absolute inset-0" style={{ background: "linear-gradient(115deg, oklch(0.18 0.06 260 / 0.92) 0%, oklch(0.22 0.07 260 / 0.78) 45%, oklch(0.18 0.06 260 / 0.35) 100%)" }} />
         </div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-24 sm:py-32 lg:py-40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 lg:py-40">
           <div className="max-w-2xl text-secondary-foreground">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Trusted across Nairobi, Kisumu, Mombasa & Nakuru
+              <span className="truncate">Trusted across Nairobi, Kisumu, Mombasa &amp; Nakuru</span>
             </div>
-            <h1 className="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-white">
+            <h1 className="mt-6 font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.02] tracking-tight text-white">
               Riders United.<br />
               <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-orange)" }}>
                 Records Digitised.
               </span>
             </h1>
-            <p className="mt-6 text-lg text-white/80 max-w-xl">
+            <p className="mt-5 sm:mt-6 text-base sm:text-lg text-white/80 max-w-xl">
               BodaLink replaces notebooks and receipt books with one secure platform — manage members, track weekly savings, monitor attendance, and keep every group accountable.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/auth"><Button size="lg" className="text-base px-7 shadow-[var(--shadow-glow)]">Sign in to your group</Button></Link>
-              <Link to="/features"><Button size="lg" variant="outline" className="text-base px-7 border-white/40 bg-white/5 text-white hover:bg-white/15">Explore features</Button></Link>
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
+              <Link to="/auth"><Button size="lg" className="w-full sm:w-auto text-base px-7 shadow-[var(--shadow-glow)]">Sign in to your group</Button></Link>
+              <Link to="/features"><Button size="lg" variant="outline" className="w-full sm:w-auto text-base px-7 border-white/40 bg-white/5 text-white hover:bg-white/15">Explore features</Button></Link>
             </div>
-            <div className="mt-10 flex flex-wrap items-center gap-8 text-sm text-white/70">
-              <div><div className="font-display text-3xl font-bold text-white">46+</div>Active members</div>
-              <div><div className="font-display text-3xl font-bold text-white">4</div>Groups onboarded</div>
-              <div><div className="font-display text-3xl font-bold text-white">KES 1.4M</div>Tracked savings</div>
+            <div className="mt-8 sm:mt-10 grid grid-cols-3 gap-4 sm:flex sm:flex-wrap sm:items-center sm:gap-8 text-xs sm:text-sm text-white/70">
+              <div><div className="font-display text-2xl sm:text-3xl font-bold text-white">46+</div>Active members</div>
+              <div><div className="font-display text-2xl sm:text-3xl font-bold text-white">4</div>Groups onboarded</div>
+              <div><div className="font-display text-2xl sm:text-3xl font-bold text-white">KES 1.4M</div>Tracked savings</div>
             </div>
           </div>
         </div>
