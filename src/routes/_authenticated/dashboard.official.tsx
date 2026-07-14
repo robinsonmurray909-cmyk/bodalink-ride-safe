@@ -47,6 +47,7 @@ function OfficialDashboard() {
   const approveFn = useServerFn(approveWelfarePayment);
   const rejectFn = useServerFn(rejectWelfarePayment);
   const externalPayFn = useServerFn(recordExternalWelfarePayment);
+  const deleteWelfareFn = useServerFn(deleteWelfareEvent);
 
   const { data, isLoading } = useQuery({
     queryKey: ["official-overview", auth.user?.id],
